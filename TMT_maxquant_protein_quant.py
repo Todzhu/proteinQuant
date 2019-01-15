@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 from plotnine import *
+from plotnine.data import *
 
 
 class proteinQuant:
@@ -68,7 +69,7 @@ class proteinQuant:
         for i in self.label.values():
             self.coefficient[i] = self.df_prot[i].median()
             self.df_prot[i] = round(self.df_prot[i] / self.coefficient[i], 3)
-            print(i,self.coefficient[i])
+            #print(i,self.coefficient[i])
 
         group = self.df_prot[self.df_prot['Unique [yes/no]']=='yes'].groupby('Protein accession')
         self.df_prot_out = round(group[list(self.label.values())].median(),3)
@@ -99,11 +100,19 @@ class proteinQuant:
             self.df_prot_out[key+' Ratio'] = round(self.df_prot_out.apply(lambda x: x[value[0]].mean()/x[value[1]].mean(), axis=1),3)
             self.df_prot_out[key+' P value'] = self.df_prot_out.apply(lambda x:ttest(x[value[0]].astype(np.float),x[value[1]].astype(np.float)),axis=1).apply(lambda x:'%e' % x).replace('nan','')
 
-        self.df_prot_out.to_csv('test.xls',sep='\t',index=None)
-
 
     def Statistics(self):
-        pass
+
+        print(ggplot(self.df_prot_out)
+              + aes('MW [kDa]','Coverage [%]')
+              + geom_point(colour='#1C86EE', size=4,alpha=0.5)
+              + xlim(0, 500)
+              + ylim(0, 100)
+              + theme_xkcd()
+              + labs(x="Protein mass [kDa]", y="Protein sequence coverage [%]", title="Protein mass and coverage distribution")
+              )
+
+
 
 
 if __name__ == '__main__':
@@ -111,3 +120,4 @@ if __name__ == '__main__':
     P.readSample()
     P.peptideQuant()
     P.proteinQuant()
+    P.Statistics()
