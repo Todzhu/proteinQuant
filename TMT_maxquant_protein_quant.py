@@ -74,10 +74,6 @@ class proteinQuant:
         self.df_prot_out = round(group[list(self.label.values())].median(),3)
         self.df_prot_out.insert(0,'PSMs',self.df_prot.groupby('Protein accession').size())
 
-        def divid(arr1,arr2):
-            arr1 = arr1.dropna()
-            arr2 = arr2.dropna()
-            return arr1.median()/arr2.median()
 
         def ttest(arr1,arr2):
             arr1 = arr1.dropna()
@@ -92,7 +88,7 @@ class proteinQuant:
         for key in self.compare.values():
             fenzi = key.split('/')[0]
             fenmu = key.split('/')[1]
-            ratio = self.df_prot.groupby(['Protein accession']).apply(lambda x: divid(x[fenzi], x[fenmu]))
+            ratio = self.df_prot.groupby(['Protein accession']).apply(lambda x: x[fenzi].dropna().median()/x[fenmu].dropna().median())
             pvalue = self.df_prot.groupby(['Protein accession']).apply(lambda x: ttest(x[fenzi], x[fenmu]))
             self.df_prot_out[key+' Ratio'] = round(ratio,3)
             self.df_prot_out[key+' P value'] = pvalue.apply(lambda x:'%e' % x).replace('nan','')
