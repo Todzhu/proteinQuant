@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 from plotnine import *
-from plotnine.data import *
+import xlsxwriter
 
 
 class proteinQuant:
@@ -57,6 +57,7 @@ class proteinQuant:
         pep_out_header_new = {'id':'ID','Leading Razor Protein':'Protein accession','Gene Names':'Gene name','Protein Names':'Protein description','Uncalibrated - Calibrated m/z [ppm]':'mass error [ppm]','Unique (Groups)':'Unique [yes/no]'}
         pep_out_header_new.update(self.label)
         df_pep_out.rename(columns=pep_out_header_new, inplace=True)
+        self.df_pep_out = df_pep_out
         self.df_prot = df_pep_out
 
 
@@ -74,7 +75,6 @@ class proteinQuant:
         group = self.df_prot[self.df_prot['Unique [yes/no]']=='yes'].groupby('Protein accession')
         self.df_prot_out = round(group[list(self.label.values())].median(),3)
         self.df_prot_out.insert(0,'PSMs',self.df_prot.groupby('Protein accession').size())
-
 
         def ttest(arr1,arr2):
             arr1 = arr1.dropna()
@@ -100,6 +100,7 @@ class proteinQuant:
             self.df_prot_out[key+' Ratio'] = round(self.df_prot_out.apply(lambda x: x[value[0]].mean()/x[value[1]].mean(), axis=1),3)
             self.df_prot_out[key+' P value'] = self.df_prot_out.apply(lambda x:ttest(x[value[0]].astype(np.float),x[value[1]].astype(np.float)),axis=1).apply(lambda x:'%e' % x).replace('nan','')
 
+        self.df_prot_out.to_csv('MS_identified_information.txt',sep='\t',index=None)
 
     def Statistics(self):
 
@@ -108,9 +109,45 @@ class proteinQuant:
               + geom_point(colour='#1C86EE', size=4,alpha=0.5)
               + xlim(0, 500)
               + ylim(0, 100)
-              + theme_xkcd()
+              + theme_linedraw()
               + labs(x="Protein mass [kDa]", y="Protein sequence coverage [%]", title="Protein mass and coverage distribution")
               )
+
+
+    def writeOut(self):
+        workbook = xlsxwriter.Workbook('MS_identified_information.xlsx')
+        summary = workbook.add_worksheet('Summary')
+        protein_quant = workbook.add_worksheet('Protein_quant')
+        peptide_quant = workbook.add_worksheet('Peptide_quant')
+        statistics = workbook.add_worksheet('Statistics')
+
+        protein_quant.set_row(0,25.5)
+        protein_quant.set_column('B:B',30)
+        header_format = workbook.add_format({
+            'text_wrap': 1,   #自动换行
+            'font_size':10,
+            'font_name':'Times New Roman',
+            'align':'center',
+            'valign':'vcenter',
+            'bold': True,
+            'fg_color': '#00CD00',
+            'border':1,
+            'bottom':1,
+            'border_color':'#000000'
+            })
+
+        for col_num,value in enumerate(self.df_prot_out.columns):
+            protein_quant.write(0,col_num,value,header_format)
+
+
+
+
+        workbook.close()
+
+
+
+
+
 
 
 
@@ -120,4 +157,5 @@ if __name__ == '__main__':
     P.readSample()
     P.peptideQuant()
     P.proteinQuant()
-    P.Statistics()
+#    P.Statistics()
+    P.writeOut()
