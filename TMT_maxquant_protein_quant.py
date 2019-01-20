@@ -139,23 +139,12 @@ class proteinQuant:
         for col_num,value in enumerate(self.df_prot_out.columns):
             protein_quant.write(0,col_num,value,header_format)
 
-
-
-
         workbook.close()
-
-
-
-
-
-
-
-
 
 if __name__ == '__main__':
     P = proteinQuant('sample', 'evidence.txt', 'peptides.txt', 'proteinGroups.txt', 'summary.txt')
     P.readSample()
     P.peptideQuant()
     P.proteinQuant()
-#    P.Statistics()
+    P.Statistics()
     P.writeOut()
