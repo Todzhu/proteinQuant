@@ -217,7 +217,6 @@ class proteinQuant:
         summary.write(4, 6, self.num_uniq_peptide, format3)
         summary.write(3, 7, 'Identified proteins', format3)
         summary.write(4, 7, self.df_prot_out['Protein accession'].count(), format3)
-
         summary.write(3, 8, 'Quantifiable proteins', format3)
 
 
@@ -236,7 +235,6 @@ class proteinQuant:
                 summary.merge_range(loc,key.replace(' Ratio',''),format3)
                 summary.write(row-1, 4 ,'Up-regulated',format3)
                 summary.write(row, 4, 'Down-regulated', format3)
-                #self.df_prot_out['Regulated Type'] = self.df_prot_out.apply(lambda x: regulatedType(x[key], x[key.replace(' Ratio','') + ' P value'], 1.2), axis=1)
                 row += 2
 
 
