@@ -220,12 +220,34 @@ class proteinQuant:
 
         summary.write(3, 8, 'Quantifiable proteins', format3)
 
+
+        def regulatedType(ratio, pvalue, fold):
+            if ratio > fold and pvalue < 0.05:
+                return 'Up'
+            if ratio < 1 / fold and pvalue < 0.05:
+                return 'Down'
+
         l = []
+        row = 11
         for key in self.df_prot_out:
+            loc = 'D' + str(row) + ':' + 'D' + str(row + 1)
             if ' Ratio' in key:
                 l.append(key)
+                summary.merge_range(loc,key.replace(' Ratio',''),format3)
+                summary.write(row-1, 4 ,'Up-regulated',format3)
+                summary.write(row, 4, 'Down-regulated', format3)
+                #self.df_prot_out['Regulated Type'] = self.df_prot_out.apply(lambda x: regulatedType(x[key], x[key.replace(' Ratio','') + ' P value'], 1.2), axis=1)
+                row += 2
+
 
         summary.write(4, 8, self.df_prot_out[l].dropna(axis=0, how='all').shape[0], format3)
+
+        summary.write(9,3,'Compare group',format3)
+        summary.write(9, 4, 'Regulated type', format3)
+        summary.write(9, 5, 'fold change >1.2', format3)
+        summary.write(9, 6, 'fold change >1.3', format3)
+        summary.write(9, 7, 'fold change >1.5', format3)
+        summary.write(9, 8, 'fold change >2', format3)
 
 #
         protein_quant = workbook.add_worksheet('Protein_quant')

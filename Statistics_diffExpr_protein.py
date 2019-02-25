@@ -3,8 +3,7 @@
 # Author: Todzhu
 # Date: 2019/12/20 11:58
 
-import xlsxwriter
-import numpy as np
+
 import pandas as pd
 
 df_protExp = pd.read_table('MS_identified_information.txt',sep='\t',low_memory=False)
