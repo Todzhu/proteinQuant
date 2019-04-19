@@ -3,6 +3,7 @@
 # author: Todzhu
 # Date: 2019/1/14 10:26
 
+import os
 import numpy as np
 import pandas as pd
 from scipy import stats
@@ -77,9 +78,11 @@ class proteinQuant:
         for i in self.label.values():
             self.coefficient[i] = self.df_prot[i].median()
             self.df_prot[i] = round(self.df_prot[i] / self.coefficient[i], 3)
-            #print(i,self.coefficient[i])
+            print(i,self.coefficient[i])
 
-        group = self.df_prot[self.df_prot['Unique [yes/no]']=='yes'].groupby('Protein accession')
+        self.df_prot = self.df_prot[(self.df_prot['Unique [yes/no]'] == 'yes')]
+        group = self.df_prot.groupby('Protein accession')
+
         self.df_prot_out = round(group[list(self.label.values())].median(),3)
         self.df_prot_out.insert(0,'PSMs',self.df_prot.groupby('Protein accession').size())
 
@@ -110,15 +113,8 @@ class proteinQuant:
         self.df_prot_out.to_csv('MS_identified_information.txt',sep='\t',index=None)
 
     def Statistics(self):
+        os.system('Rscript ')
 
-        print(ggplot(self.df_prot_out)
-              + aes('MW [kDa]','Coverage [%]')
-              + geom_point(colour='#1C86EE', size=4,alpha=0.5)
-              + xlim(0, 500)
-              + ylim(0, 100)
-              + theme_linedraw()
-              + labs(x="Protein mass [kDa]", y="Protein sequence coverage [%]", title="Protein mass and coverage distribution")
-              )
 
 
     def writeOut(self):
@@ -219,13 +215,6 @@ class proteinQuant:
         summary.write(4, 7, self.df_prot_out['Protein accession'].count(), format3)
         summary.write(3, 8, 'Quantifiable proteins', format3)
 
-
-        def regulatedType(ratio, pvalue, fold):
-            if ratio > fold and pvalue < 0.05:
-                return 'Up'
-            if ratio < 1 / fold and pvalue < 0.05:
-                return 'Down'
-
         l = []
         row = 11
         for key in self.df_prot_out:
@@ -237,20 +226,35 @@ class proteinQuant:
                 summary.write(row, 4, 'Down-regulated', format3)
                 row += 2
 
-
         summary.write(4, 8, self.df_prot_out[l].dropna(axis=0, how='all').shape[0], format3)
+        # 差异蛋白个数统计
+        y = 5
+        for i in [1.2,1.3,1.5,2]:
+            x = 10
+            for j in l:
+                pvalue = j.split(' ')[0]+' P value'
+                d = self.df_prot_out
+                d[pvalue] = pd.to_numeric(d[pvalue], errors='coerce')
+                up = d[(d[j]>i) & (d[pvalue]<0.05)]
+                down = d[(d[j]<1/i) & (d[pvalue]<0.05)]
+                summary.write(x, y, up.shape[0], format3)
+                summary.write(x+1, y, down.shape[0], format3)
+                x += 2
+            y += 1
 
-        summary.write(9,3,'Compare group',format3)
+        summary.write(9, 3, 'Compare group', format3)
         summary.write(9, 4, 'Regulated type', format3)
         summary.write(9, 5, 'fold change >1.2', format3)
         summary.write(9, 6, 'fold change >1.3', format3)
         summary.write(9, 7, 'fold change >1.5', format3)
         summary.write(9, 8, 'fold change >2', format3)
 
-#
+
         protein_quant = workbook.add_worksheet('Protein_quant')
         peptide_quant = workbook.add_worksheet('Peptide_quant')
         statistics = workbook.add_worksheet('Statistics')
+
+        statistics.insert_image('B2','Peptide_lendis.png')
 
         protein_quant.set_row(0,25.5)
         protein_quant.set_column('B:B',30)

@@ -3,7 +3,6 @@
 # Author: Todzhu
 # Date: 2019/12/20 11:58
 
-
 import pandas as pd
 
 df_protExp = pd.read_table('MS_identified_information.txt',sep='\t',low_memory=False)
@@ -40,4 +39,6 @@ for fold in [1.2,1.3,1.5,2]:
         headers.pop()
         headers.pop()
 
+
     writer.save()
+
